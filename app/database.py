@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
@@ -28,10 +29,22 @@ DATABASE_URL = next(
     ),
     DEFAULT_DATABASE_URL,
 )
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL.removeprefix("postgres://")
-elif DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL.removeprefix("postgresql://")
+
+def normalize_database_url(value: str) -> str:
+    if value.startswith("postgres://"):
+        value = "postgresql+psycopg://" + value.removeprefix("postgres://")
+    elif value.startswith("postgresql://"):
+        value = "postgresql+psycopg://" + value.removeprefix("postgresql://")
+    parts = urlsplit(value)
+    query = [
+        (key, item)
+        for key, item in parse_qsl(parts.query, keep_blank_values=True)
+        if key not in {"pgbouncer", "supa"}
+    ]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+DATABASE_URL = normalize_database_url(DATABASE_URL)
 _engine: Engine | None = None
 
 
