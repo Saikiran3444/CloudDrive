@@ -33,7 +33,6 @@ from .security import create_token
 from .storage import create_storage
 
 
-Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="CloudDrive API",
     description="Upload, share, and manage files with access control.",

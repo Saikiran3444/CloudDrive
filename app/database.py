@@ -39,6 +39,7 @@ class Base(DeclarativeBase):
 def get_db():
     db = SessionLocal()
     try:
+        Base.metadata.create_all(bind=engine)
         yield db
     finally:
         db.close()
