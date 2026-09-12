@@ -7,22 +7,6 @@
     {
       "source": "/static/:path*",
       "destination": "/api/static/:path*"
-    },
-    {
-      "source": "/auth/:path*",
-      "destination": "/api/auth/:path*"
-    },
-    {
-      "source": "/files/:path*",
-      "destination": "/api/files/:path*"
-    },
-    {
-      "source": "/shared/:path*",
-      "destination": "/api/shared/:path*"
-    },
-    {
-      "source": "/health",
-      "destination": "/api/health"
     }
   ]
 }
