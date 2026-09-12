@@ -18,7 +18,6 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload
 
-from .database import Base, engine
 from .dependencies import CurrentUser, DbSession
 from .models import FileShare, StoredFile, User
 from .routes.auth import router as auth_router

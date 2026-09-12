@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 database_file = (
@@ -24,12 +24,18 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL.removeprefix("postgres://")
 elif DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL.removeprefix("postgresql://")
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
-    pool_pre_ping=True,
-)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+_engine: Engine | None = None
+
+
+def get_engine() -> Engine:
+    global _engine
+    if _engine is None:
+        _engine = create_engine(
+            DATABASE_URL,
+            connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+            pool_pre_ping=True,
+        )
+    return _engine
 
 
 class Base(DeclarativeBase):
@@ -37,9 +43,10 @@ class Base(DeclarativeBase):
 
 
 def get_db():
-    db = SessionLocal()
+    engine = get_engine()
+    db = sessionmaker(bind=engine, autocommit=False, autoflush=False)()
     try:
-        Base.metadata.create_all(bind=engine)
+        Base.metadata.create_all(bind=get_engine())
         yield db
     finally:
         db.close()
