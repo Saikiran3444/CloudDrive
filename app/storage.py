@@ -44,11 +44,17 @@ class S3Storage:
     def __init__(self, bucket: str, prefix: str = ""):
         self.bucket = bucket
         self.prefix = prefix.strip("/")
-        self.client = boto3.client(
-            "s3",
-            endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
-            region_name=os.getenv("AWS_REGION") or None,
-        )
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = boto3.client(
+                "s3",
+                endpoint_url=os.getenv("S3_ENDPOINT_URL") or None,
+                region_name=os.getenv("AWS_REGION") or None,
+            )
+        return self._client
 
     def _key(self, key: str) -> str:
         return f"{self.prefix}/{key}" if self.prefix else key
