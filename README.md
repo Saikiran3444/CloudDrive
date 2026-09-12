@@ -60,7 +60,7 @@ Invoke-RestMethod -Method Post `
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | SQLite at `app/clouddrive.db` | SQLAlchemy database URL |
+| `DATABASE_URL` | SQLite at `app/clouddrive.db` | SQLAlchemy database URL; `POSTGRES_URL` and `POSTGRES_PRISMA_URL` are also supported |
 | `CLOUD_STORAGE_DIR` | `app/storage` | Directory for stored file bytes |
 | `MAX_UPLOAD_BYTES` | `26214400` | Maximum raw upload size (25 MiB) |
 | `PASSWORD_RESET_TTL_MINUTES` | `30` | Password-reset link lifetime |
