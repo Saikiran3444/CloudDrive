@@ -1,6 +1,7 @@
 # CloudDrive API
 https://cloud-drive-olive-theta.vercel.app/
 A self-hosted REST API for uploading, managing, and securely sharing files. It starts with SQLite locally; set `DATABASE_URL` to use PostgreSQL in deployment.
+<img width="1900" height="905" alt="image" src="https://github.com/user-attachments/assets/1968b064-d4cc-4968-9d54-3bb6c813d8fa" />
 
 ## Run
 
