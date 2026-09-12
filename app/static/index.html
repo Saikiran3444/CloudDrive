@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3155e7" />
+    <title>CloudDrive — your files, in flow</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <style>.forgot-link{display:block;margin:-5px 0 12px auto;border:0;background:transparent;color:#3155e7;font:700 11px 'DM Sans',sans-serif;cursor:pointer}.reset-link-result{margin-top:14px;padding:12px;border-radius:8px;background:#f4f8f4;color:#4d7653;font-size:11px}.reset-link-result strong{font-size:12px}.reset-link-result p{margin:4px 0 8px}.reset-link-result a{color:#3155e7;font-weight:700}.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;padding:15px}.file-card{position:relative;min-height:145px;padding:15px;border:1px solid #edf0f6;border-radius:10px;background:#fbfcff}.file-card .file-type{width:37px;height:42px;margin-bottom:18px}.file-card strong{display:block;overflow:hidden;color:#34405b;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.file-card small{display:block;margin-top:5px;color:#8b95aa;font-size:10px}.file-card .row-actions{position:absolute;right:8px;top:8px}.preview-modal{width:min(100%,880px);height:min(82vh,680px);display:flex;flex-direction:column}.preview-content{min-height:0;flex:1;margin-top:18px;overflow:auto;border:1px solid #e6eaf2;border-radius:9px;background:#f9faff}.preview-content img{display:block;max-width:100%;max-height:100%;margin:auto}.preview-content iframe{width:100%;height:100%;border:0}.preview-content pre{margin:0;padding:17px;white-space:pre-wrap;word-break:break-word;font:12px/1.55 ui-monospace,monospace}.preview-empty{display:grid;place-items:center;height:100%;padding:20px;color:#7b859a;text-align:center}@media(max-width:680px){.file-grid{grid-template-columns:repeat(2,1fr);padding:10px}.preview-modal{height:78vh;padding:21px}}</style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="CloudDrive home">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.2 18.5a4.2 4.2 0 0 1 .3-8.4A5.2 5.2 0 0 1 17.4 12a3.3 3.3 0 1 1-.3 6.5H7.2Z"/><path d="M12 8.5v7M9.5 13l2.5 2.5 2.5-2.5"/></svg></span>
+          <span>CloudDrive</span>
+        </a>
+
+        <button class="new-button" id="upload-trigger" type="button"><span>+</span> Upload files</button>
+        <input id="file-input" type="file" multiple hidden />
+
+        <nav class="nav" aria-label="Workspace">
+          <a class="nav-item active" href="#all-files"><span class="nav-icon">▦</span> All files <span class="nav-count" id="file-count">0</span></a>
+          <a class="nav-item" href="#shared"><span class="nav-icon">↗</span> Shared with me</a>
+          <a class="nav-item" href="#recent"><span class="nav-icon">◷</span> Recent</a>
+          <a class="nav-item" href="#starred"><span class="nav-icon">☆</span> Starred</a>
+        </nav>
+
+        <div class="storage-card">
+          <div class="storage-label"><span>Storage</span><strong id="storage-total">0 MB</strong></div>
+          <div class="progress"><span id="storage-progress"></span></div>
+          <p>Your files stay under your control.</p>
+        </div>
+
+        <div class="sidebar-user" id="sidebar-user">
+          <span class="avatar avatar-muted">?</span>
+          <div><strong>Welcome</strong><small>Sign in to continue</small></div>
+          <button id="logout-button" class="icon-button" title="Sign out" type="button" hidden>↪</button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <button class="mobile-menu" id="mobile-menu" aria-label="Open menu" type="button">☰</button>
+          <div>
+            <p class="eyebrow">PERSONAL WORKSPACE</p>
+            <h1>Good morning<span id="greeting-name"></span></h1>
+          </div>
+          <div class="top-actions">
+            <label class="search"><span>⌕</span><input id="search-input" placeholder="Search files" aria-label="Search files" /></label>
+            <button class="circle-button" type="button" title="Notifications">♧<i></i></button>
+            <button class="avatar avatar-button" id="account-button" type="button">?</button>
+          </div>
+        </header>
+
+        <section class="hero" id="account-panel">
+          <div class="hero-copy">
+            <span class="spark">✦</span>
+            <p class="eyebrow">ONE PLACE, EVERYWHERE</p>
+            <h2>Keep your work<br />moving forward.</h2>
+            <p>Store files securely, share the right version, and give people only the access they need.</p>
+            <div class="hero-actions">
+              <button class="button primary" id="hero-upload" type="button">Upload a file <span>→</span></button>
+              <button class="button ghost" id="auth-button" type="button">Create account</button>
+            </div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="folder-card"><span class="folder-tab"></span><div class="folder-lines"></div><div class="folder-lines short"></div></div>
+            <div class="file-chip chip-one">▣ <span>Design.fig</span></div>
+            <div class="file-chip chip-two">● <span>Report.pdf</span></div>
+          </div>
+        </section>
+
+        <section class="stats" aria-label="Workspace summary">
+          <article><span class="stat-icon blue">▤</span><div><p>Files</p><strong id="stat-files">0</strong></div></article>
+          <article><span class="stat-icon violet">↗</span><div><p>Shared files</p><strong id="stat-shared">0</strong></div></article>
+          <article><span class="stat-icon amber">◒</span><div><p>Storage used</p><strong id="stat-storage">0 B</strong></div></article>
+        </section>
+
+        <section class="files-section" id="all-files">
+          <div class="section-heading"><div><p class="eyebrow">YOUR LIBRARY</p><h2>All files</h2></div><div class="view-options"><button class="view-button selected" type="button" title="List view">☷</button><button class="view-button" type="button" title="Grid view">▦</button></div></div>
+          <div class="dropzone" id="dropzone" tabindex="0">
+            <span class="drop-icon">↑</span><div><strong>Drop files here to upload</strong><p>or choose files from your computer</p></div><button class="text-button" id="browse-button" type="button">Browse files</button>
+          </div>
+          <div class="file-table-wrap">
+            <table class="file-table"><thead><tr><th>Name</th><th>Owner</th><th>Access</th><th>Modified</th><th>Size</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody id="files-body"></tbody></table><div class="file-grid" id="file-grid" hidden></div>
+            <div class="empty-state" id="empty-state"><span>☁</span><h3>Your drive is ready</h3><p>Upload a file to start building your library.</p><button class="button primary" id="empty-upload" type="button">Upload files</button></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="auth-modal" aria-hidden="true">
+      <section class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button class="modal-close" data-close="auth-modal" type="button" aria-label="Close">×</button>
+        <span class="modal-mark"><svg viewBox="0 0 24 24"><path d="M7.2 18.5a4.2 4.2 0 0 1 .3-8.4A5.2 5.2 0 0 1 17.4 12a3.3 3.3 0 1 1-.3 6.5H7.2Z"/></svg></span>
+        <p class="eyebrow">CLOUDDRIVE</p><h2 id="auth-title">Welcome to your drive</h2><p class="modal-subtitle">Sign in, or create a private workspace in seconds.</p>
+        <div class="auth-tabs"><button class="auth-tab active" data-auth-mode="register" type="button">Create account</button><button class="auth-tab" data-auth-mode="login" type="button">Sign in</button></div>
+        <form id="auth-form"><label class="field name-field">Your name<input name="name" autocomplete="name" placeholder="Ada Lovelace" required /></label><label class="field">Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label><label class="field">Password<input name="password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required /></label><button class="forgot-link" id="forgot-password-button" type="button" hidden>Forgot password?</button><p class="form-message" id="auth-message"></p><button class="button primary full" id="auth-submit" type="submit">Create account <span>→</span></button></form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="forgot-modal" aria-hidden="true">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="forgot-title">
+        <button class="modal-close" data-close="forgot-modal" type="button" aria-label="Close">×</button>
+        <p class="eyebrow">ACCOUNT RECOVERY</p><h2 id="forgot-title">Reset your password</h2><p class="modal-subtitle">Enter your account email and we’ll prepare a secure, one-time reset link.</p>
+        <form id="forgot-form"><label class="field">Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label><p class="form-message" id="forgot-message"></p><button class="button primary full" type="submit">Send reset link</button></form>
+        <div class="reset-link-result" id="reset-link-result" hidden><strong>Reset link created</strong><p>For local development, you can open it directly:</p><a id="open-reset-link" href="#">Open password reset</a></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="reset-modal" aria-hidden="true">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+        <button class="modal-close" data-close="reset-modal" type="button" aria-label="Close">×</button>
+        <p class="eyebrow">ACCOUNT RECOVERY</p><h2 id="reset-title">Choose a new password</h2><p class="modal-subtitle">This link expires after 30 minutes and can only be used once.</p>
+        <form id="reset-form"><input id="reset-token" name="token" type="hidden" /><label class="field">New password<input name="password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required /></label><label class="field">Confirm password<input name="confirm_password" type="password" autocomplete="new-password" minlength="8" placeholder="Repeat your password" required /></label><p class="form-message" id="reset-message"></p><button class="button primary full" type="submit">Update password</button></form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="preview-modal" aria-hidden="true">
+      <section class="modal preview-modal" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+        <button class="modal-close" id="preview-close" type="button" aria-label="Close">×</button>
+        <p class="eyebrow">FILE PREVIEW</p><h2 id="preview-title">Preview</h2><div class="preview-content" id="preview-content"></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="share-modal" aria-hidden="true">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
+        <button class="modal-close" data-close="share-modal" type="button" aria-label="Close">×</button>
+        <p class="eyebrow">FILE ACCESS</p><h2 id="share-title">Share file</h2><p class="modal-subtitle" id="share-file-name"></p>
+        <form id="share-form"><label class="field">Share with an email <small>Leave blank to create a shareable link.</small><input name="recipient_email" type="email" placeholder="teammate@example.com" /></label><div class="field-row"><label class="field">Permission<select name="permission"><option value="download">Can download</option><option value="view">Can view details</option></select></label><label class="field">Expires <input name="expires_at" type="datetime-local" /></label></div><p class="form-message" id="share-message"></p><button class="button primary full" type="submit">Create share link</button></form><div class="share-result" id="share-result" hidden><span>Link ready</span><div><input id="share-url" readonly /><button id="copy-share" type="button">Copy</button></div></div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
