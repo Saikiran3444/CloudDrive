@@ -46,6 +46,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def remove_vercel_api_prefix(request: Request, call_next):
+    path = request.scope["path"]
+    if path == "/api" or path.startswith("/api/"):
+        request.scope["path"] = path[4:] or "/"
+    return await call_next(request)
+
+
 default_storage_dir = Path("/tmp/clouddrive-storage") if os.getenv("VERCEL") else Path(__file__).resolve().parent / "storage"
 STORAGE_DIR = Path(os.getenv("CLOUD_STORAGE_DIR", default_storage_dir))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
