@@ -192,8 +192,15 @@ def media_response(storage_name: str, content_type: str, request: Request) -> St
 
 
 def download_headers(filename: str) -> dict[str, str]:
-    safe_filename = filename.replace("\\", "_").replace('"', "_").replace("\r", "").replace("\n", "")
+    safe_filename = filename.replace("\\", "_").replace("/", "_").replace('"', "_").replace("\r", "").replace("\n", "")
     return {"Content-Disposition": f'attachment; filename="{safe_filename}"'}
+
+
+def safe_upload_name(value: str) -> str:
+    parts = [part for part in value.replace("\\", "/").split("/") if part not in {"", ".", ".."}]
+    if not parts:
+        return ""
+    return "/".join(part.strip() for part in parts if part.strip())
 
 
 @app.get("/", tags=["System"])
@@ -226,8 +233,8 @@ async def upload_file(
 ):
     """Upload raw bytes with `?filename=...` or an `X-Filename` header."""
     requested_name = filename or request.headers.get("x-filename")
-    safe_name = Path(requested_name or "").name.strip()
-    if not safe_name or safe_name in {".", ".."}:
+    safe_name = safe_upload_name(requested_name or "")
+    if not safe_name:
         raise HTTPException(status_code=422, detail="Provide a filename query parameter or X-Filename header")
     declared_size = request.headers.get("content-length")
     if declared_size and declared_size.isdigit() and int(declared_size) > MAX_UPLOAD_BYTES:
