@@ -51,7 +51,9 @@ app.add_middleware(
 async def remove_vercel_api_prefix(request: Request, call_next):
     path = request.scope["path"]
     if path == "/api" or path.startswith("/api/"):
-        request.scope["path"] = path[4:] or "/"
+        path = path[4:] or "/"
+        request.scope["path"] = path
+        request.scope["raw_path"] = path.encode("ascii")
     return await call_next(request)
 
 
