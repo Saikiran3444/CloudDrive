@@ -143,6 +143,11 @@ def stream_storage_file(storage_name: str) -> Iterator[bytes]:
             yield chunk
 
 
+def download_headers(filename: str) -> dict[str, str]:
+    safe_filename = filename.replace("\\", "_").replace('"', "_").replace("\r", "").replace("\n", "")
+    return {"Content-Disposition": f'attachment; filename="{safe_filename}"'}
+
+
 @app.get("/", tags=["System"])
 def home():
     return FileResponse(STATIC_DIR / "index.html")
@@ -245,7 +250,11 @@ def download_file(file_id: str, user: CurrentUser, db: DbSession):
     require_access(file, user, download=True)
     if not STORAGE.exists(file.storage_name):
         raise HTTPException(status_code=410, detail="File content is no longer available")
-    return StreamingResponse(STORAGE.open(file.storage_name), media_type=file.content_type, headers={"Content-Disposition": f'attachment; filename="{file.original_name}"'})
+    return StreamingResponse(
+        stream_storage_file(file.storage_name),
+        media_type=file.content_type,
+        headers=download_headers(file.original_name),
+    )
 
 
 @app.get("/files/{file_id}/view", response_class=FileResponse, tags=["Files"])
@@ -359,7 +368,7 @@ def public_share_download(token: str, db: DbSession):
     return StreamingResponse(
         stream_storage_file(share.file.storage_name),
         media_type=share.file.content_type,
-        headers={"Content-Disposition": f'attachment; filename="{share.file.original_name}"'},
+        headers=download_headers(share.file.original_name),
     )
 
 
