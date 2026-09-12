@@ -51,7 +51,7 @@ STORAGE_DIR = Path(os.getenv("CLOUD_STORAGE_DIR", default_storage_dir))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 STORAGE = create_storage(STORAGE_DIR)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(25 * 1024 * 1024)))
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES") or 25 * 1024 * 1024)
 FAVICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect width="64" height="64" rx="14" fill="#2563eb"/>
 <path d="M20 22a8 8 0 0 1 8-8h11l9 9v19a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8V22Z" fill="#fff"/>

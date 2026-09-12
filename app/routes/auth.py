@@ -23,7 +23,7 @@ from ..security import create_token, hash_password, hash_token, verify_password
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-PASSWORD_RESET_TTL_MINUTES = int(os.getenv("PASSWORD_RESET_TTL_MINUTES", "30"))
+PASSWORD_RESET_TTL_MINUTES = int(os.getenv("PASSWORD_RESET_TTL_MINUTES") or 30)
 EXPOSE_RESET_URL = os.getenv("EXPOSE_RESET_URL", "true").lower() == "true"
 
 
