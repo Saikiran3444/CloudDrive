@@ -48,7 +48,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STORAGE_DIR = Path(os.getenv("CLOUD_STORAGE_DIR", Path(__file__).resolve().parent / "storage"))
+default_storage_dir = Path("/tmp/clouddrive-storage") if os.getenv("VERCEL") else Path(__file__).resolve().parent / "storage"
+STORAGE_DIR = Path(os.getenv("CLOUD_STORAGE_DIR", default_storage_dir))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 STORAGE = create_storage(STORAGE_DIR)
 STATIC_DIR = Path(__file__).resolve().parent / "static"

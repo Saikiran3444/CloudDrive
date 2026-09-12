@@ -17,6 +17,8 @@ Vercel uses `api/index.py` as the serverless Python entrypoint. Configure a
 PostgreSQL `DATABASE_URL` and, for persistent file storage, an S3-compatible
 `S3_BUCKET` before deploying. SQLite and local disk storage are suitable only
 for local development because Vercel's filesystem is ephemeral.
+If those variables are omitted, the API uses temporary `/tmp` storage on
+Vercel so the function can start, but data will not persist reliably.
 
 ## React web client
 
