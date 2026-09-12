@@ -13,6 +13,8 @@ class StorageBackend(Protocol):
     def delete(self, key: str) -> None: ...
     def exists(self, key: str) -> bool: ...
     def open(self, key: str) -> BinaryIO: ...
+    def size(self, key: str) -> int: ...
+    def open_range(self, key: str, start: int, end: int) -> BinaryIO: ...
 
 
 class LocalStorage:
@@ -38,6 +40,14 @@ class LocalStorage:
 
     def open(self, key: str) -> BinaryIO:
         return self._path(key).open("rb")
+
+    def size(self, key: str) -> int:
+        return self._path(key).stat().st_size
+
+    def open_range(self, key: str, start: int, end: int) -> BinaryIO:
+        source = self._path(key).open("rb")
+        source.seek(start)
+        return source
 
 
 class S3Storage:
@@ -82,6 +92,18 @@ class S3Storage:
 
     def open(self, key: str) -> BinaryIO:
         response = self.client.get_object(Bucket=self.bucket, Key=self._key(key))
+        return response["Body"]
+
+    def size(self, key: str) -> int:
+        response = self.client.head_object(Bucket=self.bucket, Key=self._key(key))
+        return int(response["ContentLength"])
+
+    def open_range(self, key: str, start: int, end: int) -> BinaryIO:
+        response = self.client.get_object(
+            Bucket=self.bucket,
+            Key=self._key(key),
+            Range=f"bytes={start}-{end}",
+        )
         return response["Body"]
 
 

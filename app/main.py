@@ -143,6 +143,54 @@ def stream_storage_file(storage_name: str) -> Iterator[bytes]:
             yield chunk
 
 
+def media_response(storage_name: str, content_type: str, request: Request) -> StreamingResponse:
+    total = STORAGE.size(storage_name)
+    range_header = request.headers.get("range")
+    headers = {"Accept-Ranges": "bytes", "Content-Length": str(total)}
+    if not range_header:
+        return StreamingResponse(
+            stream_storage_file(storage_name),
+            media_type=content_type,
+            headers=headers,
+        )
+    if not range_header.startswith("bytes=") or "," in range_header:
+        raise HTTPException(status_code=416, detail="Invalid byte range")
+    value = range_header[6:].strip()
+    start_text, separator, end_text = value.partition("-")
+    if not separator:
+        raise HTTPException(status_code=416, detail="Invalid byte range")
+    if start_text:
+        start = int(start_text)
+        end = int(end_text) if end_text else total - 1
+    else:
+        suffix_length = int(end_text)
+        start, end = max(total - suffix_length, 0), total - 1
+    if start < 0 or start >= total or end < start:
+        raise HTTPException(status_code=416, detail="Requested range is not satisfiable")
+    end = min(end, total - 1)
+    length = end - start + 1
+    headers.update({
+        "Content-Length": str(length),
+        "Content-Range": f"bytes {start}-{end}/{total}",
+    })
+    def ranged_chunks() -> Iterator[bytes]:
+        with STORAGE.open_range(storage_name, start, end) as source:
+            remaining = length
+            while remaining:
+                chunk = source.read(min(1024 * 1024, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+                yield chunk
+
+    return StreamingResponse(
+        ranged_chunks(),
+        status_code=206,
+        media_type=content_type,
+        headers=headers,
+    )
+
+
 def download_headers(filename: str) -> dict[str, str]:
     safe_filename = filename.replace("\\", "_").replace('"', "_").replace("\r", "").replace("\n", "")
     return {"Content-Disposition": f'attachment; filename="{safe_filename}"'}
@@ -258,14 +306,14 @@ def download_file(file_id: str, user: CurrentUser, db: DbSession):
 
 
 @app.get("/files/{file_id}/view", response_class=FileResponse, tags=["Files"])
-def view_file(file_id: str, user: CurrentUser, db: DbSession):
+def view_file(file_id: str, request: Request, user: CurrentUser, db: DbSession):
     """Return file content inline for an owner or a recipient with view access."""
     file = find_file(db, file_id)
     require_access(file, user)
     if not STORAGE.exists(file.storage_name):
         raise HTTPException(status_code=410, detail="File content is no longer available")
     # No filename is supplied: compatible browsers render supported MIME types inline.
-    return StreamingResponse(stream_storage_file(file.storage_name), media_type=file.content_type)
+    return media_response(file.storage_name, file.content_type, request)
 
 
 @app.patch("/files/{file_id}", response_model=FileOut, tags=["Files"])
@@ -373,11 +421,11 @@ def public_share_download(token: str, db: DbSession):
 
 
 @app.get("/shared/{token}/view", response_class=FileResponse, tags=["Public share links"])
-def public_share_view(token: str, db: DbSession):
+def public_share_view(token: str, request: Request, db: DbSession):
     share = active_link_share(db, token)
     if not STORAGE.exists(share.file.storage_name):
         raise HTTPException(status_code=410, detail="File content is no longer available")
-    return StreamingResponse(stream_storage_file(share.file.storage_name), media_type=share.file.content_type)
+    return media_response(share.file.storage_name, share.file.content_type, request)
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
