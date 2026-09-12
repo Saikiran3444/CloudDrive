@@ -14,11 +14,19 @@ database_file = (
     else Path(__file__).resolve().parent / "clouddrive.db"
 )
 DEFAULT_DATABASE_URL = f"sqlite:///{database_file.as_posix()}"
-DATABASE_URL = (
-    os.getenv("DATABASE_URL")
-    or os.getenv("POSTGRES_URL")
-    or os.getenv("POSTGRES_PRISMA_URL")
-    or DEFAULT_DATABASE_URL
+DATABASE_URL = next(
+    (
+        value.strip()
+        for name in (
+            "DATABASE_URL",
+            "POSTGRES_URL",
+            "POSTGRES_PRISMA_URL",
+            "POSTGRES_URL_NON_POOLING",
+            "POSTGRES_URL_NO_SSL",
+        )
+        if (value := os.getenv(name, "").strip())
+    ),
+    DEFAULT_DATABASE_URL,
 )
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL.removeprefix("postgres://")
